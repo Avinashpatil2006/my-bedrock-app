@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "aws-knowledge-base": {
+      "command": "python",
+      "args": [
+        "/Users/avinashpatil/Documents/Python/MyProjects/aws_kb_mcp_server.py"
+      ],
+      "env": {
+        "AWS_REGION": "us-east-1",
+        "AWS_KNOWLEDGE_BASE_ID": "YOUR_KNOWLEDGE_BASE_ID_HERE",
+        "AWS_PROFILE": "default"
+      }
+    }
+  }
+}
