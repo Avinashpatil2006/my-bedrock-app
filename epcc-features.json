@@ -1,0 +1,139 @@
+{
+  "_warning": "Feature definitions are IMMUTABLE. Only 'passes' and 'status' fields may be modified. IT IS CATASTROPHIC TO REMOVE OR EDIT FEATURE DEFINITIONS.",
+  "_planApproved": true,
+  "_planApprovedAt": "2026-05-21",
+  "_modifiableFields": ["passes", "status", "subtasks[].status"],
+  "project": "CSV Merge with Upsert",
+  "created": "2026-05-21",
+  "lastUpdated": "2026-05-21",
+  "source": "PRD.md",
+  "features": [
+    {
+      "id": "F002",
+      "name": "Configurable join key via --key CLI argument",
+      "description": "User specifies join column at runtime with --key <column_name>. Falls back to auto-detection if not provided.",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-05-21",
+      "implementationOrder": 1,
+      "dependencies": [],
+      "blockedBy": [],
+      "estimatedHours": 0.5,
+      "planReference": "EPCC_PLAN.md#phase-1-cli--key-validation",
+      "acceptanceCriteria": [
+        "python merge_csv.py --key Custid joins on Custid correctly",
+        "Missing --key falls back to auto-detection of common columns",
+        "Key column not found in either file → error listing available columns",
+        "No hardcoded column names remain in script"
+      ],
+      "subtasks": [
+        {"name": "Add argparse with --key optional argument", "status": "completed", "estimatedHours": 0.25},
+        {"name": "Validate --key exists in both files; error with column list if not", "status": "completed", "estimatedHours": 0.25}
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F001",
+      "name": "Upsert logic",
+      "description": "Rows matching on key: merge with input2 values overwriting input1. Rows only in input1: kept unchanged. Rows only in input2: inserted.",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-05-21",
+      "implementationOrder": 2,
+      "dependencies": ["F002"],
+      "blockedBy": [],
+      "estimatedHours": 0.5,
+      "planReference": "EPCC_PLAN.md#phase-2-clean-upsert-logic",
+      "acceptanceCriteria": [
+        "Row in input1 matching input2 key → output contains input2 values",
+        "Row in input1 with no match in input2 → kept unchanged in output",
+        "Row in input2 with no match in input1 → inserted into output",
+        "Output row count = updated + unchanged + inserted"
+      ],
+      "subtasks": [
+        {"name": "Extract upsert(df1, df2, key) helper using column-union approach", "status": "completed", "estimatedHours": 0.5}
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F003",
+      "name": "Conflict resolution: input2 always wins",
+      "description": "For matching rows, all non-key columns from input2 overwrite input1, including blank/NaN values.",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-05-21",
+      "implementationOrder": 2,
+      "dependencies": ["F002"],
+      "blockedBy": [],
+      "estimatedHours": 0.0,
+      "planReference": "EPCC_PLAN.md#phase-2-clean-upsert-logic",
+      "acceptanceCriteria": [
+        "For a matched row, all non-key input2 values appear in output (not input1 values)",
+        "Blank/NaN in input2 still overwrites input1 value",
+        "No conditional keep-old-value logic"
+      ],
+      "subtasks": [
+        {"name": "Implement column-union in upsert() so df2 cols always overwrite df1 (including NaN)", "status": "completed", "estimatedHours": 0.0}
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F004",
+      "name": "Console audit trail",
+      "description": "Print per-category row counts to console: Updated / Unchanged / Inserted / Total.",
+      "priority": "P0",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-05-21",
+      "implementationOrder": 3,
+      "dependencies": ["F001", "F002", "F003"],
+      "blockedBy": [],
+      "estimatedHours": 0.2,
+      "planReference": "EPCC_PLAN.md#phase-3-wire-everything-together--audit",
+      "acceptanceCriteria": [
+        "Console prints: Updated X | Unchanged Y | Inserted Z | Total N rows",
+        "Counts match the actual rows in merged_file.csv",
+        "Final output table printed to console"
+      ],
+      "subtasks": [
+        {"name": "Wire main() to use parse_args + upsert + derive + filter + write", "status": "completed", "estimatedHours": 0.3},
+        {"name": "Print audit line: Updated X | Unchanged Y | Inserted Z | Total N", "status": "completed", "estimatedHours": 0.1},
+        {"name": "Remove all hardcoded column references from script body", "status": "completed", "estimatedHours": 0.1}
+      ],
+      "source": "PRD.md#must-have-p0"
+    },
+    {
+      "id": "F005",
+      "name": "Derived field computation",
+      "description": "Preserve TotalAmount = SubsAmount x SubsTerm (formatted $N,NNN) and SubStart reformatted from SubStartDate.",
+      "priority": "P1",
+      "status": "verified",
+      "passes": true,
+      "verifiedAt": "2026-05-21",
+      "implementationOrder": 3,
+      "dependencies": ["F001"],
+      "blockedBy": [],
+      "estimatedHours": 0.0,
+      "planReference": "EPCC_PLAN.md#phase-3-wire-everything-together--audit",
+      "acceptanceCriteria": [
+        "TotalAmount = SubsAmount * SubsTerm formatted as $N,NNN",
+        "SubStart = SubStartDate reformatted to Month-YYYY",
+        "Output filtered to output.csv schema columns"
+      ],
+      "subtasks": [
+        {"name": "Retain existing derive_fields logic unchanged (already working)", "status": "completed", "estimatedHours": 0.0}
+      ],
+      "source": "PRD.md#should-have-p1"
+    }
+  ],
+  "metrics": {
+    "total": 5,
+    "verified": 5,
+    "inProgress": 0,
+    "pending": 0,
+    "percentComplete": 100
+  }
+}
